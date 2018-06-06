@@ -30,7 +30,7 @@ namespace AzureAdWebapp
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
+                options.CheckConsentNeeded = context => false;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -45,7 +45,6 @@ namespace AzureAdWebapp
                 {
                     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
-                    options.Authority = "https://localhost.vfltest.dk/AzureAdWebapp/";
                     options.RequireHttpsMetadata = true;
                     options.MetadataAddress =
                         "https://login.microsoftonline.com/698134b6-7f35-441a-99c6-6cb8df7a36b1/.well-known/openid-configuration";
@@ -58,9 +57,6 @@ namespace AzureAdWebapp
                             var domainHint = context.Request.Query["domain_hint"];
                             if (!string.IsNullOrWhiteSpace(domainHint))
                             {
-                                // https://localhost.vfltest.dk/AzureAdWebapp/Home/About/?domain_hint=macdebugaad.segestest.dk 
-                                // or 
-                                // https://localhost.vfltest.dk/AzureAdWebapp/Home/About/?domain_hint=msdnazure.michaelkc.dk
                                 context.ProtocolMessage.SetParameter("domain_hint", domainHint);
                             }
 
@@ -70,7 +66,7 @@ namespace AzureAdWebapp
                             if (context.Failure.Message.Contains("AADSTS51004", StringComparison.Ordinal))
                             {
                                 context.HandleResponse();
-                                context.Response.Redirect("/AzureAdWebapp/Home/UserNotFound");
+                                context.Response.Redirect("/Home/UserNotFound");
                             }
                             return Task.FromResult<object>(null);
                         },

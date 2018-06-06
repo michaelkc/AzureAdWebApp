@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using AzureAdWebapp.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -19,21 +15,7 @@ namespace AzureAdWebapp.Controllers
         [Authorize]
         public IActionResult About()
         {
-            ViewData["Message"] = "Your application description page.";
-            //ViewData["Message"] = string.Join(";", this.User.Claims.Select(c => $"{c.Type}:{c.Value}"));
             return View(this.User);
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
         }
 
         public IActionResult UserNotFound()
