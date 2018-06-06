@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -44,7 +45,7 @@ namespace AzureAdWebapp
                 .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
                 {
                     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-
+                    options.ClaimActions.Remove("amr");
                     options.RequireHttpsMetadata = true;
                     options.MetadataAddress =
                         "https://login.microsoftonline.com/698134b6-7f35-441a-99c6-6cb8df7a36b1/.well-known/openid-configuration";
@@ -60,7 +61,7 @@ namespace AzureAdWebapp
                                 context.ProtocolMessage.SetParameter("domain_hint", domainHint);
                             }
 
-                            return Task.FromResult(0);
+                            return Task.CompletedTask;
                         },
                         OnRemoteFailure = context => {
                             if (context.Failure.Message.Contains("AADSTS51004", StringComparison.Ordinal))
@@ -68,8 +69,22 @@ namespace AzureAdWebapp
                                 context.HandleResponse();
                                 context.Response.Redirect("/Home/UserNotFound");
                             }
-                            return Task.FromResult<object>(null);
+                            return Task.CompletedTask;
                         },
+                        OnMessageReceived = context =>
+                        {
+                            // Save the id_token as a claim 1
+                            context.HttpContext.Items[".SEGES.id_token"] = context.ProtocolMessage.IdToken;
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context => {
+                            // Save the id_token as a claim 2
+                            string idToken = context.HttpContext.Items[".SEGES.id_token"]?.ToString() ?? "<empty>";
+                            var identity = new ClaimsIdentity(new List<Claim>());
+                            identity.AddClaim(new Claim("id_token", idToken));
+                            context.Principal.AddIdentity(identity);
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 

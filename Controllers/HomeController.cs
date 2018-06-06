@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using AzureAdWebapp.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +18,22 @@ namespace AzureAdWebapp.Controllers
         [Authorize]
         public IActionResult About()
         {
-            return View(this.User);
+            var idToken = this.User.Claims.Single(c => c.Type == "id_token").Value;
+            var parsedToken = new JwtSecurityTokenHandler().ReadJwtToken(idToken);
+            var payloads =
+                parsedToken.Payload.Claims
+                    .Select(c => c.Type)
+                    .Distinct()
+                    .Select(ct => new KeyValuePair<string,string>(ct, parsedToken.Payload[ct].ToString()));
+                    
+
+
+            var model = new UserViewModel
+            {
+                User = this.User,
+                Payload = payloads
+            };
+            return View(model);
         }
 
         public IActionResult UserNotFound()
